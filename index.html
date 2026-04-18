@@ -1,3 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Comprog Reviewer ni Kerr Boy</title>
+<style>
+  :root{
+    --bg:#0d0f14; --card:#151821; --accent:#1e90ff; --accent-glow:0 0 12px #1e90ff;
+    --text:#e9ecf2; --muted:#9aa3b2; --radius:10px;
+  }
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Arial,sans-serif;margin:0;padding:28px;}
+  .wrap{max-width:980px;margin:0 auto;background:var(--card);padding:28px;border-radius:14px;
+        box-shadow:0 10px 40px rgba(0,0,0,.6);border:1px solid #232734;}
+  h1{margin:0 0 18px 0;color:var(--accent);text-shadow:var(--accent-glow);text-align:center;}
+  .meta{color:var(--muted);text-align:center;margin-bottom:18px;}
+  .q{background:#141822;padding:14px;border-radius:10px;margin-bottom:12px;border-left:4px solid var(--accent);
+     transition:.12s;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+  .q:hover{transform:translateX(6px);box-shadow:0 12px 30px rgba(30,144,255,0.08);}
+  .q strong{display:block;margin-bottom:8px;}
+  .choices label{display:block;cursor:pointer;padding:6px 0;color:var(--text);}
+  input[type="radio"]{transform:scale(1.15);margin-right:8px;accent-color:var(--accent);}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+  button{background:var(--accent);color:#000;border:none;padding:10px 16px;border-radius:10px;cursor:pointer;
+         box-shadow:var(--accent-glow);font-weight:600}
+  button.secondary{background:#0b1220;color:var(--text);border:1px solid rgba(255,255,255,.04)}
+  #result{margin-top:18px;font-size:20px;color:var(--accent);font-weight:700}
+  #answers{margin-top:14px;background:#0f1724;padding:12px;border-radius:10px;border-left:4px solid #6df6ff;color:var(--muted)}
+  .small{font-size:13px;color:var(--muted);margin-top:8px}
+  @media(max-width:640px){ .wrap{padding:16px} button{width:100%} .controls{flex-direction:column} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Comprog Reviewer ni Kerr Boy?</h1>
+    <p class="meta">Jade bugok <strong>Steady ka lang at magsagot</strong> — pang malupitang nilalang boy?</p>
+
+    <form id="quiz"></form>
+
+    <div class="controls">
+      <button id="submitBtn" type="button">Submit mo sagot, boy?</button>
+      <button id="showKeyBtn" type="button" class="secondary">Labas sagot dito, boy?</button>
+      <div style="flex:1"></div>
+      <div class="small">Refresh mo boy para umulit?</div>
+    </div>
+
+    <div id="result" aria-live="polite"></div>
+    <div id="answers" style="display:none"></div>
+  </div>
+
+<script>
+// ======= QUESTIONS (60 C++ items) =======
 const questions = [
 {q:"What is an exception in Java?", choices:["A syntax error","An event that disrupts program flow","A variable","A loop"], correct:1},
 {q:"Exception handling is used to:", choices:["Stop program","Ignore errors","Handle runtime errors","Compile code"], correct:2},
@@ -64,3 +116,55 @@ const questions = [
 {q:"ORDER BY is used for:", choices:["Filtering","Sorting","Deleting","Joining"], correct:1},
 {q:"SQL is:", choices:["Case sensitive","Case insensitive","Loop","Error"], correct:1}
 ];
+// ===== build quiz =====
+const quiz = document.getElementById('quiz');
+
+questions.forEach((item, idx) => {
+  const block = document.createElement('div');
+  block.className = 'q';
+  let inner = `<strong>${idx+1}. ${item.q}</strong><div class="choices">`;
+  item.choices.forEach((ch,i)=> inner += `<label><input type="radio" name="q${idx}" value="${i}"> ${String.fromCharCode(65+i)}. ${ch}</label>`);
+  inner += `</div>`;
+  block.innerHTML = inner;
+  quiz.appendChild(block);
+});
+
+// ===== submit behavior =====
+const submitBtn = document.getElementById('submitBtn');
+const showKeyBtn = document.getElementById('showKeyBtn');
+const resultDiv = document.getElementById('result');
+const answersDiv = document.getElementById('answers');
+
+submitBtn.addEventListener('click', () => {
+  // disable inputs immediately (Google Form style)
+  document.querySelectorAll('input[type="radio"]').forEach(i=> i.disabled = true);
+  // compute score
+  let score = 0;
+  questions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const val = sel ? Number(sel.value) : null;
+    if(val === q.correct) score++;
+  });
+  resultDiv.textContent = `Score: ${score} / ${questions.length}`;
+  // hide answer key until requested (answersDiv remains hidden)
+  answersDiv.style.display = 'none';
+  answersDiv.innerHTML = '';
+});
+
+showKeyBtn.addEventListener('click', () => {
+  // show answer key in answersDiv
+  let html = '<h3>Answer Key</h3>';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">';
+  questions.forEach((q,i)=> {
+    html += `<div><strong>${i+1}.</strong> ${String.fromCharCode(65+q.correct)}. ${q.choices[q.correct]}</div>`;
+  });
+  html += '</div>';
+  answersDiv.innerHTML = html;
+  answersDiv.style.display = 'block';
+  // keep inputs disabled (if not already)
+  document.querySelectorAll('input[type="radio"]').forEach(i=> i.disabled = true);
+});
+</script>
+</body>
+</html>
+
